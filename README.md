@@ -1,1 +1,2 @@
 # ChineseStocksAnalysis
+该项目主要内容是获取A股年报财务信息并通过机器学习算法进行涨跌预测。

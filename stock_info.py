@@ -30,6 +30,7 @@ class ChinaStockInfo():
         self._url = 'http://dcfm.eastmoney.com/em_mutisvcexpandinterface/api/js/get?'
         
         self.rt_dict = {0:'ZCFZB20', 1:'LRB20', 2:'XJLLB20'}
+        self.sheet_titles = ('BalanceSheet', 'IncomeStatement', 'CashFlowStatement')
         self.df_fr = [pd.DataFrame(), pd.DataFrame(), pd.DataFrame()]
 
     def get_table(self, report_type, start_year, end_year):
@@ -91,21 +92,21 @@ class ChinaStockInfo():
         return pd.DataFrame(items, columns = items[0].keys()).replace(digit_mapping, regex = True)
 
     def save_dataframe(self, st):
-        sheet_titles = ('BalanceSheet', 'IncomeStatement', 'CashFlowStatement')
-        self.df_fr[st].to_pickle(sheet_titles[st] + '.pkl')
+        
+        self.df_fr[st].to_pickle(self.sheet_titles[st] + '.pkl')
         # Create a Pandas Excel writer using XlsxWriter as the engine.
-        xlsx_writer = pd.ExcelWriter(   sheet_titles[st] + '.xlsx', 
+        xlsx_writer = pd.ExcelWriter(   self.sheet_titles[st] + '.xlsx', 
                                         engine='xlsxwriter', 
                                         datetime_format='yyyy/mm/dd', 
                                         date_format='yyyy/mm/dd')
         # Convert the dataframe to an XlsxWriter Excel object.
         df = self.df_fr[st].copy().reset_index()
-        df.to_excel(xlsx_writer, sheet_name=sheet_titles[st], index = False)
+        df.to_excel(xlsx_writer, sheet_name=self.sheet_titles[st], index = False)
         df_cols = tuple(df.columns)
 
         # Get the xlsxwriter workbook and worksheet objects.
         workbook = xlsx_writer.book
-        worksheet = xlsx_writer.sheets[sheet_titles[st]]
+        worksheet = xlsx_writer.sheets[self.sheet_titles[st]]
 
         special_cols = [   [-1, '00000#', 'scode'], 
                             [-1, '0000#', 'hycode'], 
@@ -141,8 +142,16 @@ class ChinaStockInfo():
         # as the index or headers or any cells that contain dates or datetimes.
         
         xlsx_writer.save()
+    
+    def load_dataframe(self, st):
+        self.df_fr[st] = pd.read_pickle(self.sheet_titles[st] + '.pkl')
 
 csi = ChinaStockInfo()
-csi.get_table(0, 2017, 2017)
-csi.get_table(1, 2017, 2017)
-csi.get_table(2, 2017, 2017)
+csi.load_dataframe(0)
+csi.load_dataframe(1)
+csi.load_dataframe(2)
+print(csi.df_fr[0])
+all_df = pd.merge(  pd.merge(csi.df_fr[0], csi.df_fr[1], how = 'inner', left_index = True, right_index = True),
+                    csi.df_fr[1], how = 'inner', left_index = True, right_index = True)
+
+print(set(all_df['publishname_x']))
