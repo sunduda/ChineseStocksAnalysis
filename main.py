@@ -1,5 +1,5 @@
 import pandas as pd
-from china_company_info import ChinaCompanyInfo
+from cnstockfund import ChinaCompanyInfo
 csi = ChinaCompanyInfo()
 """csi.get_table(0, 2013, 2017)
 csi.get_table(1, 2013, 2017)
